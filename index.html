@@ -646,7 +646,8 @@
                 status.className = 'balance-status balanced';
             } else {
                 const heavier = leftPanMass > rightPanMass ? 'ліва' : 'права';
-                status.textContent = `Терези не збалансовані (${heavier} шалька важча на ${difference} г)`;
+                //status.textContent = `Терези не збалансовані (${heavier} шалька важча на ${difference} г)`;
+                status.textContent = `Терези не збалансовані`;
                 status.className = 'balance-status unbalanced';
             }
         }
