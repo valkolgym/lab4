@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лабораторна робота: Вимірювання мас тіл</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .lab-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .balance-area {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .balance-container {
+            position: relative;
+            height: 350px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+			background: #e2e3e5;
+        }
+
+        .balance-base {
+            width: 80px;
+            height: 60px;
+            background: #8B4513;
+            border-radius: 10px;
+            position: absolute;
+			top: 280px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .balance-pillar {
+            width: 8px;
+            height: 120px;
+            background: #8B4513;
+            position: absolute;
+            left: 50%;
+            top: -115px;
+            transform: translateX(-50%);
+            border-radius: 4px;
+        }
+
+        .balance-beam {
+            width: 400px;
+            height: 8px;
+            background: #8B4513;
+            position: absolute;
+            left: 50%;
+            top: -110px;
+            transform: translateX(-50%);
+            border-radius: 4px;
+            transition: transform 0.5s ease;
+            transform-origin: center;
+        }
+
+        .balance-pan {
+            width: 100px;
+            height: 60px;
+            background: #C0C0C0;
+            border-radius: 5px;
+            position: absolute;
+            top: -60px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            border: 2px dashed transparent;
+            transition: all 0.3s ease;
+        }
+
+        .balance-pan.left {
+            left: 20px;
+        }
+
+        .balance-pan.right {
+            right: 20px;
+        }
+
+        .balance-pan.drag-over {
+            border-color: #007bff;
+            background: rgba(0, 123, 255, 0.1);
+        }
+
+        .pan-contents {
+            position: absolute;
+            top: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0px;
+            width: 100px;
+            min-height: 50px;
+        }
+
+        .objects-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .objects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .object-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            cursor: grab;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .object-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border-color: #007bff;
+        }
+
+        .object-item:active {
+            cursor: grabbing;
+        }
+
+        .object-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .object-visual {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+
+        .weight-visual {
+            width: 25px;
+            height: 25px;
+            background: #FFD700;
+            border: 2px solid #FFA500;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #8B4513;
+            pointer-events: none;
+        }
+
+        .on-pan-item {
+            cursor: pointer;
+            margin: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .on-pan-item:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+        }
+
+        .btn-success:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .results-table th {
+            background: #343a40;
+            color: white;
+            font-weight: 600;
+        }
+
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .balance-status {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .balanced {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .unbalanced {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .neutral {
+            background: #e2e3e5;
+            color: #383d41;
+            border: 2px solid #d6d8db;
+        }
+
+        .instructions {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #007bff;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 1200px) {
+            .lab-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.8;
+            transform: rotate(5deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Лабораторна робота з фізики</h1>
+            <p><strong>Тема:</strong> Вимірювання мас тіл за допомогою важільних терезів</p>
+        </div>
+
+        <div class="instructions">
+            <h3>Інструкція:</h3>
+            <ol>
+                <li>Перетягніть тіло для зважування на ліву шальку терезів</li>
+                <li>Перетягніть важки на праву шальку до досягнення рівноваги</li>
+                <li>Щоб забрати важок - клікніть на нього на шальці</li>
+                <li>Коли терези збалансовані, натисніть "Записати результат"</li>
+                <li>Повторіть для всіх об'єктів згідно завдання</li>
+            </ol>
+        </div>
+
+        <div class="lab-content">
+            <div class="balance-area">
+                <div class="balance-status" id="balanceStatus">Перетягніть об'єкт на ліву шальку для початку зважування</div>
+                
+                <div class="balance-container">
+                    <div class="balance-base">
+                        <div class="balance-pillar"></div>
+                        <div class="balance-beam" id="balanceBeam">
+                            <div class="balance-pan left" id="leftPan">
+                                <div class="pan-contents" id="leftContents"></div>
+                            </div>
+                            <div class="balance-pan right" id="rightPan">
+                                <div class="pan-contents" id="rightContents"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-success" onclick="recordResult()" id="recordBtn" disabled>
+                        Записати результат
+                    </button>
+                    <button class="btn btn-warning" onclick="clearBalance()">
+                        Очистити терези
+                    </button>
+                </div>
+            </div>
+
+            <div class="objects-section">
+                <h3 style="margin-bottom: 15px; color: #343a40;">Обладнання:</h3>
+                
+                <h4 style="margin-bottom: 10px; color: #6c757d;">Тіла для зважування:</h4>
+                <div class="objects-grid" id="bodiesGrid">
+                    <div class="object-item" draggable="true" data-type="body" data-mass="87" data-name="Тіло №1">
+                        <div class="object-visual" style="background: #FF6B6B;"></div>
+                        <small>Тіло №1</small>
+                    </div>
+                    <div class="object-item" draggable="true" data-type="body" data-mass="124" data-name="Тіло №2">
+                        <div class="object-visual" style="background: #4ECDC4;"></div>
+                        <small>Тіло №2</small>
+                    </div>
+                    <div class="object-item" draggable="true" data-type="body" data-mass="45" data-name="Порожня склянка">
+                        <div class="object-visual" style="background: linear-gradient(to bottom, transparent 20%, #E3F2FD 20%); border: 2px solid #2196F3;"></div>
+                        <small>Порожня склянка</small>
+                    </div>
+                    <div class="object-item" draggable="true" data-type="body" data-mass="245" data-name="Склянка з водою">
+                        <div class="object-visual" style="background: linear-gradient(to bottom, #2196F3 0%, #1976D2 100%); border: 2px solid #0D47A1;"></div>
+                        <small>Склянка з водою</small>
+                    </div>
+                </div>
+
+                <h4 style="margin: 20px 0 10px 0; color: #6c757d;">Важки:</h4>
+                <div class="objects-grid" id="weightsGrid">
+                    <div class="object-item" draggable="true" data-type="weight" data-mass="100">
+                        <div class="weight-visual">100г</div>
+                        <small>100 г</small>
+                    </div>
+                    <div class="object-item" draggable="true" data-type="weight" data-mass="50">
+                        <div class="weight-visual" style="width: 20px; height: 20px;">50г</div>
+                        <small>50 г</small>
+                    </div>
+                    <div class="object-item" draggable="true" data-type="weight" data-mass="20">
+                        <div class="weight-visual" style="width: 18px; height: 18px; font-size: 8px;">20г</div>
+                        <small>20 г</small>
+                    </div>
+                    <div class="object-item" draggable="true" data-type="weight" data-mass="10">
+                        <div class="weight-visual" style="width: 16px; height: 16px; font-size: 8px;">10г</div>
+                        <small>10 г</small>
+                    </div>
+                    <div class="object-item" draggable="true" data-type="weight" data-mass="5">
+                        <div class="weight-visual" style="width: 14px; height: 14px; font-size: 7px;">5г</div>
+                        <small>5 г</small>
+                    </div>
+                    <div class="object-item" draggable="true" data-type="weight" data-mass="2">
+                        <div class="weight-visual" style="width: 12px; height: 12px; font-size: 6px;">2г</div>
+                        <small>2 г</small>
+                    </div>
+                    <div class="object-item" draggable="true" data-type="weight" data-mass="1">
+                        <div class="weight-visual" style="width: 10px; height: 10px; font-size: 6px;">1г</div>
+                        <small>1 г</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>№ досліду</th>
+                    <th>Зважуване тіло</th>
+                    <th>Набір важків на шальці</th>
+                    <th>Маса тіла m₀, г</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let leftPanMass = 0;
+        let rightPanMass = 0;
+        let leftPanObject = null;
+        let rightPanWeights = [];
+        let experimentNumber = 1;
+        let draggedElement = null;
+
+        // Drag and Drop functionality
+        function initializeDragAndDrop() {
+            const draggableItems = document.querySelectorAll('.object-item[draggable="true"]');
+            const dropZones = document.querySelectorAll('.balance-pan');
+
+            draggableItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('drop', handleDrop);
+                zone.addEventListener('dragenter', handleDragEnter);
+                zone.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedElement = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            e.target.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.target.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('drag-over');
+            
+            if (!draggedElement) return;
+
+            const isLeftPan = e.target.id === 'leftPan' || e.target.closest('#leftPan');
+            const isRightPan = e.target.id === 'rightPan' || e.target.closest('#rightPan');
+            
+            if (!isLeftPan && !isRightPan) return;
+
+            const itemType = draggedElement.dataset.type;
+            const mass = parseInt(draggedElement.dataset.mass);
+
+            if (isLeftPan && itemType === 'body') {
+                if (leftPanObject) {
+                    alert('На лівій шальці вже є тіло! Спочатку очистіть терези.');
+                    return;
+                }
+                placeBodyOnLeft(draggedElement, mass);
+            } else if (isRightPan && itemType === 'weight') {
+                addWeightToRight(draggedElement, mass);
+            } else {
+                if (itemType === 'body' && isRightPan) {
+                    alert('Тіла слід класти на ліву шальку!');
+                } else if (itemType === 'weight' && isLeftPan) {
+                    alert('Важки слід класти на праву шальку!');
+                }
+            }
+        }
+
+        function placeBodyOnLeft(element, mass) {
+            const name = element.dataset.name;
+            
+            leftPanMass = mass;
+            leftPanObject = {
+                name: name,
+                mass: mass,
+                element: element
+            };
+            
+            // Add visual representation to left pan
+            const leftContents = document.getElementById('leftContents');
+            const objectVisual = element.querySelector('.object-visual').cloneNode(true);
+            objectVisual.style.width = '35px';
+            objectVisual.style.height = '35px';
+            objectVisual.classList.add('on-pan-item');
+            leftContents.appendChild(objectVisual);
+            
+            // Hide original element
+            element.style.opacity = '0.3';
+            element.draggable = false;
+            
+            updateBalance();
+            updateBalanceStatus();
+        }
+
+        function addWeightToRight(element, mass) {
+            rightPanMass += mass;
+            rightPanWeights.push(mass);
+            
+            // Add visual representation to right pan
+            const rightContents = document.getElementById('rightContents');
+            const weightVisual = element.querySelector('.weight-visual').cloneNode(true);
+            weightVisual.style.margin = '2px';
+            weightVisual.classList.add('on-pan-item');
+            weightVisual.dataset.mass = mass;
+            
+            // Add click handler to remove weight
+            weightVisual.addEventListener('click', function() {
+                removeWeight(this, mass);
+            });
+            
+            rightContents.appendChild(weightVisual);
+            
+            updateBalance();
+            updateBalanceStatus();
+        }
+
+        function removeWeight(weightElement, mass) {
+            rightPanMass -= mass;
+            const index = rightPanWeights.indexOf(mass);
+            if (index > -1) {
+                rightPanWeights.splice(index, 1);
+            }
+            
+            weightElement.remove();
+            
+            updateBalance();
+            updateBalanceStatus();
+        }
+
+        function updateBalance() {
+            const beam = document.getElementById('balanceBeam');
+            const difference = leftPanMass - rightPanMass;
+            
+            // Calculate rotation angle (max 20 degrees)
+            // Важче тіло опускається - позитивна різниця означає поворот за годинниковою стрілкою
+            const maxAngle = 20;
+            const angle = Math.max(-maxAngle, Math.min(maxAngle, difference * 0.08));
+            
+            beam.style.transform = `translateX(-50%) rotate(${-angle}deg)`;
+            
+            // Enable record button if balanced (within 1 gram tolerance)
+            const isBalanced = Math.abs(difference) <= 1 && leftPanObject;
+            document.getElementById('recordBtn').disabled = !isBalanced;
+        }
+
+        function updateBalanceStatus() {
+            const status = document.getElementById('balanceStatus');
+            
+            if (!leftPanObject) {
+                status.textContent = 'Перетягніть тіло на ліву шальку для початку зважування';
+                status.className = 'balance-status neutral';
+                return;
+            }
+            
+            const difference = Math.abs(leftPanMass - rightPanMass);
+            
+            if (difference <= 1) {
+                status.textContent = `✓ Терези збалансовані! Маса: ${rightPanMass} г`;
+                status.className = 'balance-status balanced';
+            } else {
+                const heavier = leftPanMass > rightPanMass ? 'ліва' : 'права';
+                status.textContent = `Терези не збалансовані (${heavier} шалька важча на ${difference} г)`;
+                status.className = 'balance-status unbalanced';
+            }
+        }
+
+        function recordResult() {
+            if (!leftPanObject || Math.abs(leftPanMass - rightPanMass) > 1) return;
+            
+            const tbody = document.getElementById('resultsBody');
+            const row = tbody.insertRow();
+            
+            // Format weights list
+            const weightsCount = {};
+            rightPanWeights.forEach(weight => {
+                weightsCount[weight] = (weightsCount[weight] || 0) + 1;
+            });
+            
+            const weightsList = Object.entries(weightsCount)
+                .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+                .map(([weight, count]) => count > 1 ? `${count}×${weight}г` : `${weight}г`)
+                .join(', ');
+            
+            row.innerHTML = `
+                <td>${experimentNumber}</td>
+                <td>${leftPanObject.name}</td>
+                <td>${weightsList}</td>
+                <td>${rightPanMass}</td>
+            `;
+            
+            experimentNumber++;
+            clearBalance();
+        }
+
+        function clearBalance() {
+            // Clear pans
+            document.getElementById('leftContents').innerHTML = '';
+            document.getElementById('rightContents').innerHTML = '';
+            
+            // Restore original objects
+            if (leftPanObject && leftPanObject.element) {
+                leftPanObject.element.style.opacity = '1';
+                leftPanObject.element.draggable = true;
+            }
+            
+            // Reset masses and objects
+            leftPanMass = 0;
+            rightPanMass = 0;
+            leftPanObject = null;
+            rightPanWeights = [];
+            
+            // Reset buttons
+            document.getElementById('recordBtn').disabled = true;
+            
+            // Reset balance beam
+            document.getElementById('balanceBeam').style.transform = 'translateX(-50%) rotate(0deg)';
+            
+            updateBalance();
+            updateBalanceStatus();
+        }
+
+        // Initialize drag and drop when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDragAndDrop();
+            updateBalanceStatus();
+        });
+    </script>
+</body>
+</html>
