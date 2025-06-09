@@ -423,19 +423,19 @@
                 
                 <h4 style="margin-bottom: 10px; color: #6c757d;">Тіла для зважування:</h4>
                 <div class="objects-grid" id="bodiesGrid">
-                    <div class="object-item" draggable="true" data-type="body" data-mass="87" data-name="Тіло №1">
+                    <div class="object-item" id="body1" draggable="true" data-type="body" data-mass="87" data-name="Тіло №1">
                         <div class="object-visual" style="background: #FF6B6B;"></div>
                         <small>Тіло №1</small>
                     </div>
-                    <div class="object-item" draggable="true" data-type="body" data-mass="124" data-name="Тіло №2">
+                    <div class="object-item" id="body2" draggable="true" data-type="body" data-mass="124" data-name="Тіло №2">
                         <div class="object-visual" style="background: #4ECDC4;"></div>
                         <small>Тіло №2</small>
                     </div>
-                    <div class="object-item" draggable="true" data-type="body" data-mass="45" data-name="Порожня склянка">
+                    <div class="object-item" id="emptyGlass" draggable="true" data-type="body" data-mass="45" data-name="Порожня склянка">
                         <div class="object-visual" style="background: linear-gradient(to bottom, transparent 20%, #E3F2FD 20%); border: 2px solid #2196F3;"></div>
                         <small>Порожня склянка</small>
                     </div>
-                    <div class="object-item" draggable="true" data-type="body" data-mass="245" data-name="Склянка з водою">
+                    <div class="object-item" id="fullGlass" draggable="true" data-type="body" data-mass="245" data-name="Склянка з водою">
                         <div class="object-visual" style="background: linear-gradient(to bottom, #2196F3 0%, #1976D2 100%); border: 2px solid #0D47A1;"></div>
                         <small>Склянка з водою</small>
                     </div>
@@ -732,10 +732,27 @@
             updateBalanceStatus();
         }
 
+        function initDataMass() {
+            const body1 = document.querySelector("#body1");
+            const body2 = document.querySelector("#body2");
+            const emptyGlass = document.querySelector("#emptyGlass");
+            const fullGlass = document.querySelector("#fullGlass");
+            let massBody1 = Math.floor(Math.random() * (300 - 30) + 30);
+            body1.setAttribute('data-mass', massBody1);
+            let massBody2 = Math.floor(Math.random() * (300 - 30) + 30);
+            body2.setAttribute('data-mass', massBody2);
+            let massGlass = [10, 20, 30, 40, 50]
+            let typeGlass = Math.floor(Math.random() * 5);
+            emptyGlass.setAttribute('data-mass', massGlass[typeGlass]);
+            let massWater = Math.floor(Math.random() * (5 * massGlass[typeGlass] - massGlass[typeGlass]) + massGlass[typeGlass]);
+            fullGlass.setAttribute('data-mass', (massGlass[typeGlass] + massWater));
+        }
+
         // Initialize drag and drop when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initializeDragAndDrop();
             updateBalanceStatus();
+            initDataMass();
         });
     </script>
 </body>
